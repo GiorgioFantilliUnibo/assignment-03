@@ -4,19 +4,16 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import java.awt.*;
-import java.util.Hashtable;
-
 public class BoidsView implements ChangeListener {
 
-	private JFrame frame;
-	private BoidsPanel boidsPanel;
-	private JSlider cohesionSlider, separationSlider, alignmentSlider;
-	private BoidsModel model;
-	private int width, height;
+	private final JFrame frame;
+    private final InitialPanel initialPanel;
+    private SimulationPanel simulationPanel;
+    private final BoidsSimulator simulator;
+    private final int width, height;
 	
-	public BoidsView(BoidsModel model, int width, int height) {
-		this.model = model;
+	public BoidsView(BoidsSimulator simulator, int width, int height) {
+		this.simulator = simulator;
 		this.width = width;
 		this.height = height;
 		
@@ -24,74 +21,51 @@ public class BoidsView implements ChangeListener {
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		JPanel cp = new JPanel();
-		LayoutManager layout = new BorderLayout();
-		cp.setLayout(layout);
-
-        boidsPanel = new BoidsPanel(this, model);
-		cp.add(BorderLayout.CENTER, boidsPanel);
-
-        JPanel slidersPanel = new JPanel();
-        
-        cohesionSlider = makeSlider();
-        separationSlider = makeSlider();
-        alignmentSlider = makeSlider();
-        
-        slidersPanel.add(new JLabel("Separation"));
-        slidersPanel.add(separationSlider);
-        slidersPanel.add(new JLabel("Alignment"));
-        slidersPanel.add(alignmentSlider);
-        slidersPanel.add(new JLabel("Cohesion"));
-        slidersPanel.add(cohesionSlider);
-		        
-		cp.add(BorderLayout.SOUTH, slidersPanel);
-
-		frame.setContentPane(cp);	
-		
+		initialPanel = new InitialPanel(this);
+        frame.setContentPane(initialPanel);
         frame.setVisible(true);
 	}
 
-	private JSlider makeSlider() {
-		var slider = new JSlider(JSlider.HORIZONTAL, 0, 20, 10);        
-		slider.setMajorTickSpacing(10);
-		slider.setMinorTickSpacing(1);
-		slider.setPaintTicks(true);
-		slider.setPaintLabels(true);
-		Hashtable labelTable = new Hashtable<>();
-		labelTable.put( 0, new JLabel("0") );
-		labelTable.put( 10, new JLabel("1") );
-		labelTable.put( 20, new JLabel("2") );
-		slider.setLabelTable( labelTable );
-		slider.setPaintLabels(true);
-        slider.addChangeListener(this);
-		return slider;
-	}
-	
 	public void update(int frameRate) {
-		boidsPanel.setFrameRate(frameRate);
-		boidsPanel.repaint();
-	}
+        if (simulationPanel != null) {
+            simulationPanel.update(frameRate);
+        }
+    }
 
-	@Override
-	public void stateChanged(ChangeEvent e) {
-		if (e.getSource() == separationSlider) {
-			var val = separationSlider.getValue();
-			model.setSeparationWeight(0.1*val);
-		} else if (e.getSource() == cohesionSlider) {
-			var val = cohesionSlider.getValue();
-			model.setCohesionWeight(0.1*val);
-		} else {
-			var val = alignmentSlider.getValue();
-			model.setAlignmentWeight(0.1*val);
-		}
-	}
-	
-	public int getWidth() {
-		return width;
-	}
+    public void updateSuspendResumeButtonText(String text) {
+        if (simulationPanel != null) {
+            simulationPanel.updateSuspendResumeButtonText(text);
+        }
+    }
 
-	public int getHeight() {
-		return height;
-	}
+    public void resetToInitialScreen() {
+        frame.setContentPane(initialPanel);
+        frame.revalidate();
+        frame.repaint();
+    }
 
+    public void showSimulationScreen(BoidsModel model) {
+        simulationPanel = new SimulationPanel(this, model);
+        frame.setContentPane(simulationPanel);
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        if (simulationPanel == null) return;
+        JSlider source = (JSlider) e.getSource();
+        double value = source.getValue() * 0.1;
+        if (source == simulationPanel.getSeparationSlider()) {
+            simulator.getModel().setSeparationWeight(value);
+        } else if (source == simulationPanel.getCohesionSlider()) {
+            simulator.getModel().setCohesionWeight(value);
+        } else if (source == simulationPanel.getAlignmentSlider()) {
+            simulator.getModel().setAlignmentWeight(value);
+        }
+    }
+
+    public BoidsSimulator getSimulator() { return simulator; }
+    public int getWidth() { return width; }
+    public int getHeight() { return height; }
 }
