@@ -8,7 +8,7 @@ import java.util.*;
 
 public class WorldActor extends AbstractActor {
 
-    private final ActorRef renderer; // view actor
+    private Optional<ActorRef> guardian;
     private final List<ActorRef> boidActors = new ArrayList<>();
     private final Map<Integer, BoidState> currentStates = new HashMap<>();
     private long currentTick = 0;
@@ -23,30 +23,44 @@ public class WorldActor extends AbstractActor {
     private Phase phase = Phase.IDLE;
     private int pendingResponses = 0;
 
-    public WorldActor(ActorRef renderer) {
-        this.renderer = renderer;
+    public WorldActor(double aliW, double cohW, double perceptionRadius, double maxSpeed, double avoidRadius, int height, int width, double sepW) {
+        this.aliW = aliW;
+        this.cohW = cohW;
+        this.perceptionRadius = perceptionRadius;
+        this.maxSpeed = maxSpeed;
+        this.avoidRadius = avoidRadius;
+        this.height = height;
+        this.width = width;
+        this.sepW = sepW;
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
                 .match(StartSimulation.class, this::onStartSimulation)
-                .match(Tick.class, this::onTick)
+                .match(TickGuardian.class, this::onTick)
                 .match(BoidUpdate.class, this::onBoidUpdate)
+                .match(SeparationChange.class, this::onSeparationChange)
+                .match(CohesionChange.class, this::onCohesionChange)
+                .match(AlignmentChange.class, this::onAlignmentChange)
+                .match(GuardianActorAttachment.class, this::onGuardianActorAttachment)
                 .build();
+    }
+
+    private void onAlignmentChange(AlignmentChange alignmentChange) {
+        this.aliW = alignmentChange.value();
+    }
+
+    private void onCohesionChange(CohesionChange cohesionChange) {
+        this.cohW = cohesionChange.value();
+    }
+
+    private void onSeparationChange(SeparationChange separationChange) {
+        this.sepW = separationChange.value();
     }
 
     private void onStartSimulation(StartSimulation msg) {
         log("Starting simulation with " + msg.nBoids() + " boids");
-
-        this.sepW = msg.sepW();
-        this.aliW = msg.aliW();
-        this.cohW = msg.cohW();
-        this.perceptionRadius = msg.perceptionRadius();
-        this.avoidRadius = msg.avoidRadius();
-        this.maxSpeed = msg.maxSpeed();
-        this.width = msg.width();
-        this.height = msg.height();
 
         // Creazione boid attori
         boidActors.clear();
@@ -62,7 +76,7 @@ public class WorldActor extends AbstractActor {
 
     }
 
-    private void onTick(Tick msg) {
+    private void onTick(TickGuardian msg) {
         if (phase != Phase.IDLE) {
             log("Ignoring Tick, still processing previous step");
             return;
@@ -97,13 +111,17 @@ public class WorldActor extends AbstractActor {
 
         pendingResponses--;
         if (pendingResponses == 0 && phase == Phase.UPDATING_POSITIONS) {
-            // Tutti i boid hanno aggiornato posizione → invia frame al renderer
-            renderer.tell(new RenderFrame(currentTick, new ArrayList<>(currentStates.values())), getSelf());
+            // Tutti i boid hanno aggiornato posizione → invia frame al guardian
+            guardian.ifPresent((x) -> x.tell(new RenderFrame(currentTick, new ArrayList<>(currentStates.values())), getSelf()));
             phase = Phase.IDLE;
         }
     }
 
     private void log(String msg) {
         System.out.println("[WorldActor] " + msg);
+    }
+
+    private void onGuardianActorAttachment(GuardianActorAttachment msg){
+        this.guardian = Optional.of(msg.guardian());
     }
 }

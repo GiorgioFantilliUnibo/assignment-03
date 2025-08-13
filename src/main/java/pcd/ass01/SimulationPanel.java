@@ -4,16 +4,17 @@ package pcd.ass01;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Hashtable;
+import pcd.ass01.SimulationMessages.*;
 
 public class SimulationPanel extends JPanel {
     private final BoidsPanel boidsPanel;
     private final JSlider cohesionSlider, separationSlider, alignmentSlider;
     private final JButton suspendResumeButton, stopButton;
 
-    public SimulationPanel(BoidsView view, BoidsModel model) {
+    public SimulationPanel(ViewActor view, double width, int nBoids) {
         setLayout(new BorderLayout());
 
-        boidsPanel = new BoidsPanel(view, model);
+        boidsPanel = new BoidsPanel(view, width, nBoids);
         add(boidsPanel, BorderLayout.CENTER);
 
         JPanel controlPanel = new JPanel();
@@ -41,11 +42,11 @@ public class SimulationPanel extends JPanel {
 
         add(controlPanel, BorderLayout.SOUTH);
 
-        suspendResumeButton.addActionListener(e -> view.getSimulator().toggleSuspendResume());
-        stopButton.addActionListener(e -> view.getSimulator().stopSimulation());
+        suspendResumeButton.addActionListener(e -> view.toggleSuspendResume());
+        stopButton.addActionListener(e -> view.stopSimulation());
     }
 
-    private JSlider makeSlider(String name, BoidsView view) {
+    private JSlider makeSlider(String name, ViewActor view) {
         JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 20, 10);
         slider.setMajorTickSpacing(10);
         slider.setMinorTickSpacing(1);
@@ -61,8 +62,9 @@ public class SimulationPanel extends JPanel {
         return slider;
     }
 
-    public void update(int frameRate) {
+    public void update(int frameRate, RenderFrame msg) {
         boidsPanel.setFrameRate(frameRate);
+        boidsPanel.setState(msg.states());
         boidsPanel.repaint();
     }
 

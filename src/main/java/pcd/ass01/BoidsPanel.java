@@ -2,22 +2,32 @@ package pcd.ass01;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
+
+import pcd.ass01.SimulationMessages.*;
 
 public class BoidsPanel extends JPanel {
 
-	private final BoidsView view; 
-	private final BoidsModel model;
+	private final ViewActor view;
+    private final double nBoids;
+    private final double width;
+    private List<BoidState> boidStates;
     private int framerate;
 
-    public BoidsPanel(BoidsView view, BoidsModel model) {
-    	this.model = model;
+    public BoidsPanel(ViewActor view, double width, int nBoids) {
+        this.nBoids = nBoids;
+        this.width = width;
     	this.view = view;
     }
 
     public void setFrameRate(int framerate) {
     	this.framerate = framerate;
     }
-    
+
+    public void setState(List<BoidState> boidStates){
+        this.boidStates = boidStates;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -25,22 +35,19 @@ public class BoidsPanel extends JPanel {
         
         var w = view.getWidth();
         var h = view.getHeight();
-        var envWidth = model.getWidth();
-        var xScale = w/envWidth;
-
-        var boids = model.getBoids();
+        var xScale = w/ this.width;
 
         g.setColor(Color.BLUE);
-        for (Boid boid : boids) {
-        	var x = boid.getPos().x();
-        	var y = boid.getPos().y();
+        for (BoidState boid : boidStates) {
+        	var x = boid.pos().x();
+        	var y = boid.pos().y();
         	int px = (int)(w/2 + x*xScale);
         	int py = (int)(h/2 - y*xScale);
             g.fillOval(px,py, 5, 5);
         }
         
         g.setColor(Color.BLACK);
-        g.drawString("Num. Boids: " + boids.size(), 10, 25);
+        g.drawString("Num. Boids: " + this.nBoids, 10, 25);
         g.drawString("Framerate: " + framerate, 10, 40);
    }
 }

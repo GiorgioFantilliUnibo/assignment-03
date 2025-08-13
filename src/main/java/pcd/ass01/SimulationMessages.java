@@ -1,5 +1,6 @@
 package pcd.ass01;
 
+import akka.actor.*;
 import java.util.List;
 
 public class SimulationMessages {
@@ -8,16 +9,21 @@ public class SimulationMessages {
 
     public interface Command {}
 
+//    public static record StartSimulation(
+//            int nBoids,
+//            double sepW, double aliW, double cohW,
+//            double perceptionRadius, double avoidRadius, double maxSpeed,
+//            long tickMs,
+//            double width, double height
+//    ) implements Command {}
+
     public static record StartSimulation(
-            int nBoids,
-            double sepW, double aliW, double cohW,
-            double perceptionRadius, double avoidRadius, double maxSpeed,
-            long tickMs,
-            double width, double height
+            int nBoids
     ) implements Command {}
 
-    public static record startGuardian()
+    public static record TickGuardian() implements Command {}
 
+    public static record SuspendResumeSimulation() implements Command {}
     public static record PauseSimulation() implements Command {}
     public static record ResumeSimulation() implements Command {}
     public static record StopSimulation() implements Command {}
@@ -38,5 +44,15 @@ public class SimulationMessages {
     public static record RenderFrame(long tickId, List<BoidState> states) implements Command {}
 
     public static record BoidState(int id, P2d pos, V2d vel) {}
+
+    public static record SeparationChange(double value) implements Command {}
+
+    public static record CohesionChange(double value) implements Command {}
+
+    public static record AlignmentChange(double value) implements Command {}
+
+    public static record GuardianActorAttachment(ActorRef guardian) implements Command {}
+
+    public static record ViewActorAttachment(ActorRef view) implements Command {}
 
 }
