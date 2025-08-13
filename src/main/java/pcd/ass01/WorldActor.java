@@ -14,15 +14,14 @@ public class WorldActor extends AbstractActor {
     private final Map<Integer, BoidState> currentStates = new HashMap<>();
     private long currentTick = 0;
 
-    // Parametri di simulazione
     private double sepW, aliW, cohW;
     private double perceptionRadius, avoidRadius, maxSpeed;
     private double height, width;
 
-    // Stato interno per sincronizzazione
     private enum Phase { IDLE, UPDATING_VELOCITIES, UPDATING_POSITIONS }
     private Phase phase = Phase.IDLE;
     private int pendingResponses = 0;
+
 
     public WorldActor(double aliW, double cohW, double perceptionRadius, double maxSpeed, double avoidRadius, int height, int width, double sepW) {
         this.aliW = aliW;
@@ -63,7 +62,6 @@ public class WorldActor extends AbstractActor {
     private void onStartSimulation(StartSimulation msg) {
         log("Starting simulation with " + msg.nBoids() + " boids");
 
-        // Creazione boid attori
         boidActors.clear();
         currentStates.clear();
         for (int i = 0; i < msg.nBoids(); i++) {
@@ -71,7 +69,7 @@ public class WorldActor extends AbstractActor {
             V2d vel = new V2d(Math.random() * maxSpeed/2 - maxSpeed/4, Math.random() * maxSpeed/2 - maxSpeed/4);
             BoidState initState = new BoidState(i, pos, vel);
             currentStates.put(i, initState);
-            ActorRef boid = getContext().actorOf(Props.create(BoidActor.class, i, getSelf()), "boid-" + i);
+            ActorRef boid = getContext().actorOf(Props.create(BoidActor.class, initState));
             boidActors.add(boid);
         }
 
@@ -85,7 +83,6 @@ public class WorldActor extends AbstractActor {
         currentTick++;
         phase = Phase.UPDATING_VELOCITIES;
 
-        // Manda snapshot a tutti i boid per aggiornare velocità
         List<BoidState> statesList = new ArrayList<>(currentStates.values());
         Snapshot snap = new Snapshot(currentTick, statesList, sepW, aliW, cohW,
                 perceptionRadius, avoidRadius, maxSpeed);
@@ -94,8 +91,6 @@ public class WorldActor extends AbstractActor {
             boid.tell(snap, getSelf());
         }
 
-        // Passaggio immediato alla fase 2: dopo aver inviato snapshot,
-        // mandiamo un Tick a tutti per aggiornare le posizioni.
         phase = Phase.UPDATING_POSITIONS;
         pendingResponses = boidActors.size();
         for (ActorRef boid : boidActors) {
@@ -103,16 +98,12 @@ public class WorldActor extends AbstractActor {
         }
     }
 
-    /**
-     * Riceve aggiornamenti di posizione dai boid (FASE 2).
-     */
     private void onBoidUpdate(BoidUpdate upd) {
         currentStates.put(upd.id(),
                 new BoidState(upd.id(), upd.pos(), upd.vel()));
 
         pendingResponses--;
         if (pendingResponses == 0 && phase == Phase.UPDATING_POSITIONS) {
-            // Tutti i boid hanno aggiornato posizione → invia frame al guardian
             guardian.ifPresent((x) -> x.tell(new RenderFrame(currentTick, new ArrayList<>(currentStates.values())), getSelf()));
             phase = Phase.IDLE;
         }

@@ -55,10 +55,6 @@ public class BoidActor extends AbstractActor {
         this.state = state;
     }
 
-    public BoidState getState() {
-        return this.state;
-    }
-
     @Override
     public Receive createReceive() {
         return receiveBuilder()
@@ -73,11 +69,8 @@ public class BoidActor extends AbstractActor {
 
     private void onTick(Tick msg) {
         updatePosition(msg);
-        // Manda stato aggiornato al world
         getSender().tell(new BoidUpdate(this.state.id, this.state.pos, this.state.vel), getSelf());
     }
-
-    /* --------- LOGICA VELOCITÀ E POSIZIONE --------- */
 
     private void updateVelocityFromSnapshot(Snapshot snap) {
         List<BoidState> nearbyBoids = getNearbyBoids(snap);
@@ -93,7 +86,6 @@ public class BoidActor extends AbstractActor {
                 .sum(cohesion.mul(snap.cohW()))
         );
 
-        // limita velocità
         double speed = this.state.vel.abs();
         if (speed > snap.maxSpeed()) {
             this.state.vel = this.state.vel.getNormalized().mul(snap.maxSpeed());
@@ -105,14 +97,11 @@ public class BoidActor extends AbstractActor {
             this.state.pos().sum(this.state.vel())
         );
 
-        /* environment wrap-around */
         if (this.state.pos.x() < msg.minX()) this.state.setPos( this.state.pos.sum(new V2d(msg.width(), 0)) );
         if (this.state.pos.x() >= msg.maxX()) this.state.setPos( this.state.pos.sum(new V2d(-msg.width(), 0)) );
         if (this.state.pos.y() < msg.minY()) this.state.setPos( this.state.pos.sum(new V2d(0, msg.height())) );
         if (this.state.pos.y() >= msg.maxY()) this.state.setPos( this.state.pos.sum(new V2d(0, -msg.height())) );
     }
-
-    /* --------- METODI DI CALCOLO --------- */
 
     private List<BoidState> getNearbyBoids(Snapshot snap) {
         var list = new ArrayList<BoidState>();
