@@ -43,8 +43,6 @@ public class SimulationMessages {
 
     public static record RenderFrame(long tickId, List<BoidState> states) implements Command {}
 
-    public static record BoidState(int id, P2d pos, V2d vel) {}
-
     public static record SeparationChange(double value) implements Command {}
 
     public static record CohesionChange(double value) implements Command {}

@@ -9,14 +9,11 @@ import java.util.List;
 public class BoidActor extends AbstractActor {
 
     private final int id;
-    private P2d pos;
-    private V2d vel;
+    private BoidState state;
 
-
-    public BoidActor(int id, P2d pos, V2d vel) {
+    public BoidActor(int id, BoidState state) {
         this.id = id;
-        this.pos = pos;
-        this.vel = vel;
+        this.state = state;
     }
 
     @Override
@@ -34,7 +31,7 @@ public class BoidActor extends AbstractActor {
     private void onTick(Tick msg) {
         updatePosition(msg);
         // Manda stato aggiornato al world
-        getSender().tell(new BoidUpdate(id, pos, vel), getSelf());
+        getSender().tell(new BoidUpdate(id, state.pos(), state.vel()), getSelf());
     }
 
     /* --------- LOGICA VELOCITÀ E POSIZIONE --------- */

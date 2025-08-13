@@ -70,7 +70,7 @@ public class WorldActor extends AbstractActor {
             V2d vel = new V2d(Math.random() * maxSpeed/2 - maxSpeed/4, Math.random() * maxSpeed/2 - maxSpeed/4);
             BoidState initState = new BoidState(i, pos, vel);
             currentStates.put(i, initState);
-            ActorRef boid = getContext().actorOf(Props.create(BoidActor.class, i, getSelf()), "boid-" + i);
+            ActorRef boid = getContext().actorOf(Props.create(BoidActor.class, i, initState));
             boidActors.add(boid);
         }
 

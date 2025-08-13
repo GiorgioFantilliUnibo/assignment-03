@@ -106,7 +106,11 @@ public class ViewActor extends AbstractActor implements ChangeListener {
     }
 
     public void showSimulationScreen(StartSimulation msg) {
-        this.nBoids.ifPresentOrElse(x -> simulationPanel = new SimulationPanel(this, environmentWidth, x), IllegalStateException::new);
+        this.nBoids.ifPresentOrElse(
+                x -> simulationPanel = new SimulationPanel(this, environmentWidth, x),
+                () -> { throw new IllegalStateException("nBoids is not set before showSimulationScreen."); }
+        );
+//        this.nBoids.ifPresentOrElse(x -> simulationPanel = new SimulationPanel(this, environmentWidth, x), IllegalStateException::new);
         frame.setContentPane(simulationPanel);
         frame.revalidate();
         frame.repaint();
