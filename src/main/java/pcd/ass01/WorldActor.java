@@ -1,6 +1,7 @@
 package pcd.ass01;
 
 import akka.actor.*;
+import pcd.ass01.BoidActor.BoidState;
 import pcd.ass01.SimulationMessages.*;
 
 import java.util.*;

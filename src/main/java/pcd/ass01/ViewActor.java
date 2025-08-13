@@ -51,35 +51,45 @@ public class ViewActor extends AbstractActor implements ChangeListener {
     }
 
     private void onStartRendering(StartSimulation msg) {
-        paused = false;
-        frameRate = 0;
-        showSimulationScreen(msg);
+        SwingUtilities.invokeLater(() -> {
+            paused = false;
+            frameRate = 0;
+            showSimulationScreen(msg);
+        });
     }
 
     private void onPauseSimulation(PauseSimulation msg) {
-        paused = true;
-        updateSuspendResumeButtonText("Resume");
+        SwingUtilities.invokeLater(() -> {
+            paused = true;
+            updateSuspendResumeButtonText("Resume");
+        });
     }
 
     private void onResumeSimulation(ResumeSimulation msg) {
-        paused = false;
-        updateSuspendResumeButtonText("Suspend");
+        SwingUtilities.invokeLater(() -> {
+            paused = false;
+            updateSuspendResumeButtonText("Suspend");
+        });
     }
 
     private void onStopSimulation(StopSimulation msg) {
-        paused = false;
-        resetToInitialScreen();
+        SwingUtilities.invokeLater(() -> {
+            paused = false;
+            resetToInitialScreen();
+        });
     }
 
     private void onRenderFrame(RenderFrame msg) {
-        if (paused) return;
+        SwingUtilities.invokeLater(() -> {
+            if (paused) return;
 
-        long now = System.currentTimeMillis();
-        if (now - lastFrameTime > 0) {
-            frameRate = (int) (1000.0 / (now - lastFrameTime));
-        }
-        lastFrameTime = now;
-        update(frameRate, msg);
+            long now = System.currentTimeMillis();
+            if (now - lastFrameTime > 0) {
+                frameRate = (int) (1000.0 / (now - lastFrameTime));
+            }
+            lastFrameTime = now;
+            update(frameRate, msg);
+        });
     }
 
     public void update(int frameRate, RenderFrame msg) {

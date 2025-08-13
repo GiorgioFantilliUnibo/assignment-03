@@ -8,15 +8,55 @@ import java.util.List;
 
 public class BoidActor extends AbstractActor {
 
-    private final int id;
-    private P2d pos;
-    private V2d vel;
+    public static class BoidState {
+        private final int id;
+        private P2d pos;
+        private V2d vel;
+
+        public BoidState(int id, P2d pos, V2d vel) {
+            this.id = id;
+            this.pos = pos;
+            this.vel = vel;
+        }
+
+        public int id() {
+            return id;
+        }
+
+        public P2d pos() {
+            return new P2d(pos.x(), pos.y()); 
+        }
+
+        public void setPos(double x, double y) {
+            this.pos = new P2d(x, y);
+        }
+
+        public void setPos(P2d pos) {
+            this.pos = new P2d(pos.x(), pos.y());
+        }
+
+        public V2d vel() {
+            return new V2d(vel.x(), vel.y());
+        }
+
+        public void setVel(double x, double y) {
+            this.vel = new V2d(x, y);
+        }
+
+        public void setVel(V2d vel) {
+            this.vel = new V2d(vel.x(), vel.y());
+        }
+    }
 
 
-    public BoidActor(int id, P2d pos, V2d vel) {
-        this.id = id;
-        this.pos = pos;
-        this.vel = vel;
+    private final BoidState state;
+
+    public BoidActor(BoidState state) {
+        this.state = state;
+    }
+
+    public BoidState getState() {
+        return this.state;
     }
 
     @Override
@@ -34,7 +74,7 @@ public class BoidActor extends AbstractActor {
     private void onTick(Tick msg) {
         updatePosition(msg);
         // Manda stato aggiornato al world
-        getSender().tell(new BoidUpdate(id, pos, vel), getSelf());
+        getSender().tell(new BoidUpdate(this.state.id, this.state.pos, this.state.vel), getSelf());
     }
 
     /* --------- LOGICA VELOCITÀ E POSIZIONE --------- */
@@ -46,25 +86,30 @@ public class BoidActor extends AbstractActor {
         V2d alignment = calculateAlignment(nearbyBoids);
         V2d cohesion = calculateCohesion(nearbyBoids);
 
-        vel = vel.sum(alignment.mul(snap.aliW()))
+        this.state.setVel(
+            this.state.vel()
+                .sum(alignment.mul(snap.aliW()))
                 .sum(separation.mul(snap.sepW()))
-                .sum(cohesion.mul(snap.cohW()));
+                .sum(cohesion.mul(snap.cohW()))
+        );
 
         // limita velocità
-        double speed = vel.abs();
+        double speed = this.state.vel.abs();
         if (speed > snap.maxSpeed()) {
-            vel = vel.getNormalized().mul(snap.maxSpeed());
+            this.state.vel = this.state.vel.getNormalized().mul(snap.maxSpeed());
         }
     }
 
     private void updatePosition(Tick msg) {
-        pos = pos.sum(vel);
+        this.state.setPos(
+            this.state.pos().sum(this.state.vel())
+        );
 
         /* environment wrap-around */
-        if (pos.x() < msg.minX()) pos = pos.sum(new V2d(msg.width(), 0));
-        if (pos.x() >= msg.maxX()) pos = pos.sum(new V2d(-msg.width(), 0));
-        if (pos.y() < msg.minY()) pos = pos.sum(new V2d(0, msg.height()));
-        if (pos.y() >= msg.maxY()) pos = pos.sum(new V2d(0, -msg.height()));
+        if (this.state.pos.x() < msg.minX()) this.state.setPos( this.state.pos.sum(new V2d(msg.width(), 0)) );
+        if (this.state.pos.x() >= msg.maxX()) this.state.setPos( this.state.pos.sum(new V2d(-msg.width(), 0)) );
+        if (this.state.pos.y() < msg.minY()) this.state.setPos( this.state.pos.sum(new V2d(0, msg.height())) );
+        if (this.state.pos.y() >= msg.maxY()) this.state.setPos( this.state.pos.sum(new V2d(0, -msg.height())) );
     }
 
     /* --------- METODI DI CALCOLO --------- */
@@ -72,8 +117,8 @@ public class BoidActor extends AbstractActor {
     private List<BoidState> getNearbyBoids(Snapshot snap) {
         var list = new ArrayList<BoidState>();
         for (BoidState other : snap.states()) {
-            if (other.id() != this.id) {
-                double distance = pos.distance(other.pos());
+            if (other.id() != this.state.id) {
+                double distance = this.state.pos.distance(other.pos());
                 if (distance < snap.perceptionRadius()) {
                     list.add(other);
                 }
@@ -93,7 +138,7 @@ public class BoidActor extends AbstractActor {
         avgVx /= nearbyBoids.size();
         avgVy /= nearbyBoids.size();
 
-        return new V2d(avgVx - vel.x(), avgVy - vel.y()).getNormalized();
+        return new V2d(avgVx - this.state.vel.x(), avgVy - this.state.vel.y()).getNormalized();
     }
 
     private V2d calculateCohesion(List<BoidState> nearbyBoids) {
@@ -107,17 +152,17 @@ public class BoidActor extends AbstractActor {
         centerX /= nearbyBoids.size();
         centerY /= nearbyBoids.size();
 
-        return new V2d(centerX - pos.x(), centerY - pos.y()).getNormalized();
+        return new V2d(centerX - this.state.pos.x(), centerY - this.state.pos.y()).getNormalized();
     }
 
     private V2d calculateSeparation(List<BoidState> nearbyBoids, Snapshot snap) {
         double dx = 0, dy = 0;
         int count = 0;
         for (BoidState other : nearbyBoids) {
-            double distance = pos.distance(other.pos());
+            double distance = this.state.pos.distance(other.pos());
             if (distance < snap.avoidRadius()) {
-                dx += pos.x() - other.pos().x();
-                dy += pos.y() - other.pos().y();
+                dx += this.state.pos.x() - other.pos().x();
+                dy += this.state.pos.y() - other.pos().y();
                 count++;
             }
         }

@@ -1,6 +1,8 @@
 package pcd.ass01;
 
 import akka.actor.*;
+import pcd.ass01.BoidActor.BoidState;
+
 import java.util.List;
 
 public class SimulationMessages {
@@ -8,15 +10,6 @@ public class SimulationMessages {
     private SimulationMessages() {}
 
     public interface Command {}
-
-//    public static record StartSimulation(
-//            int nBoids,
-//            double sepW, double aliW, double cohW,
-//            double perceptionRadius, double avoidRadius, double maxSpeed,
-//            long tickMs,
-//            double width, double height
-//    ) implements Command {}
-
     public static record StartSimulation(
             int nBoids
     ) implements Command {}
@@ -42,8 +35,6 @@ public class SimulationMessages {
     public static record BoidUpdate(int id, P2d pos, V2d vel) implements Command {}
 
     public static record RenderFrame(long tickId, List<BoidState> states) implements Command {}
-
-    public static record BoidState(int id, P2d pos, V2d vel) {}
 
     public static record SeparationChange(double value) implements Command {}
 

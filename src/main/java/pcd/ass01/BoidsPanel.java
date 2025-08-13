@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-import pcd.ass01.SimulationMessages.*;
+import pcd.ass01.BoidActor.BoidState;
 
 public class BoidsPanel extends JPanel {
 
