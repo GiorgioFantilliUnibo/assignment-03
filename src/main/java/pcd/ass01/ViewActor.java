@@ -6,6 +6,9 @@ import pcd.ass01.SimulationMessages.*;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Optional;
 
 public class ViewActor extends AbstractActor implements ChangeListener {
@@ -32,7 +35,16 @@ public class ViewActor extends AbstractActor implements ChangeListener {
 
         frame = new JFrame("Boids Simulation");
         frame.setSize(width, height);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                guardianActor.tell(new StopApplication(), getSelf());
+                frame.dispose();
+                getContext().stop(self());
+            }
+        });
+
 
         initialPanel = new InitialPanel(this);
         frame.setContentPane(initialPanel);
@@ -120,7 +132,6 @@ public class ViewActor extends AbstractActor implements ChangeListener {
                 x -> simulationPanel = new SimulationPanel(this, environmentWidth, x, msg.states()),
                 () -> { throw new IllegalStateException("nBoids is not set before showSimulationScreen."); }
         );
-//        this.nBoids.ifPresentOrElse(x -> simulationPanel = new SimulationPanel(this, environmentWidth, x), IllegalStateException::new);
         frame.setContentPane(simulationPanel);
         frame.revalidate();
         frame.repaint();

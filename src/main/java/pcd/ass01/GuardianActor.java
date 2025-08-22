@@ -6,12 +6,6 @@ import pcd.ass01.SimulationMessages.*;
 import java.time.Duration;
 import java.util.Optional;
 
-/**
- * GuardianActor:
- * - Riceve comandi dalla GUI (Start, Pause, Resume, Stop)
- * - Crea il WorldActor e il RendererActor
- * - Gestisce il ciclo di simulazione (tick) senza Cancellable
- */
 public class GuardianActor extends AbstractActor {
 
     private final static long TICK_MS = 1000/25;
@@ -29,6 +23,7 @@ public class GuardianActor extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(StopSimulation.class, this::onStop)
+                .match(StopApplication.class, this::onStopApplication)
                 .match(SeparationChange.class, this::onParametersChange)
                 .match(CohesionChange.class, this::onParametersChange)
                 .match(AlignmentChange.class, this::onParametersChange)
@@ -77,18 +72,21 @@ public class GuardianActor extends AbstractActor {
     private void onStop(StopSimulation msg) {
         log("Stopping simulation");
         running = false;
-        //getContext().stop(world);
         renderer.ifPresent(x -> x.tell(msg, getSelf()));
-        //renderer.ifPresent(x -> getContext().stop(renderer.get()));
+    }
+
+    private void onStopApplication(StopApplication msg) {
+        log("Stopping application");
+        running = false;
+        getContext().stop(world);
+        getContext().stop(self());
+        System.exit(0);
     }
 
     private void onAttachView(ViewActorAttachment msg){
         this.renderer = Optional.of(msg.view());
     }
 
-    /**
-     * Pianifica il prossimo tick solo se la simulazione è in esecuzione.
-     */
     private void scheduleNextTick() {
         if (running) {
             getContext().getSystem().scheduler().scheduleOnce(

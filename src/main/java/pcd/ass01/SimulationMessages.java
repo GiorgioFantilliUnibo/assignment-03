@@ -24,6 +24,7 @@ public class SimulationMessages {
     public static record PauseSimulation() implements Command {}
     public static record ResumeSimulation() implements Command {}
     public static record StopSimulation() implements Command {}
+    public static record StopApplication() implements Command {}
 
     public static record Tick(
            double width, double height, double minX, double maxX, double minY, double maxY
