@@ -72,6 +72,7 @@ public class WorldActor extends AbstractActor {
             ActorRef boid = getContext().actorOf(Props.create(BoidActor.class, initState));
             boidActors.add(boid);
         }
+        guardian.ifPresent(x -> x.tell(new WorldReady(new ArrayList<>(currentStates.values())), getSelf()));
 
     }
 
@@ -104,6 +105,7 @@ public class WorldActor extends AbstractActor {
 
         pendingResponses--;
         if (pendingResponses == 0 && phase == Phase.UPDATING_POSITIONS) {
+            System.out.println("Boidstate lenght: " + boidActors.size());
             guardian.ifPresent((x) -> x.tell(new RenderFrame(currentTick, new ArrayList<>(currentStates.values())), getSelf()));
             phase = Phase.IDLE;
         }

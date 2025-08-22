@@ -42,7 +42,7 @@ public class ViewActor extends AbstractActor implements ChangeListener {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(StartSimulation.class, this::onStartRendering)
+                .match(WorldReady.class, this::onStartRendering)
                 .match(PauseSimulation.class, this::onPauseSimulation)
                 .match(ResumeSimulation.class, this::onResumeSimulation)
                 .match(StopSimulation.class, this::onStopSimulation)
@@ -50,7 +50,7 @@ public class ViewActor extends AbstractActor implements ChangeListener {
                 .build();
     }
 
-    private void onStartRendering(StartSimulation msg) {
+    private void onStartRendering(WorldReady msg) {
         SwingUtilities.invokeLater(() -> {
             paused = false;
             frameRate = 0;
@@ -115,9 +115,9 @@ public class ViewActor extends AbstractActor implements ChangeListener {
         guardianActor.tell(new StartSimulation(nBoids), getSelf());
     }
 
-    public void showSimulationScreen(StartSimulation msg) {
+    public void showSimulationScreen(WorldReady msg) {
         this.nBoids.ifPresentOrElse(
-                x -> simulationPanel = new SimulationPanel(this, environmentWidth, x),
+                x -> simulationPanel = new SimulationPanel(this, environmentWidth, x, msg.states()),
                 () -> { throw new IllegalStateException("nBoids is not set before showSimulationScreen."); }
         );
 //        this.nBoids.ifPresentOrElse(x -> simulationPanel = new SimulationPanel(this, environmentWidth, x), IllegalStateException::new);

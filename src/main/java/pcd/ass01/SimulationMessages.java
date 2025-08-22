@@ -14,6 +14,10 @@ public class SimulationMessages {
             int nBoids
     ) implements Command {}
 
+    public static record WorldReady(
+            List<BoidState> states
+    ) implements Command {}
+
     public static record TickGuardian() implements Command {}
 
     public static record SuspendResumeSimulation() implements Command {}

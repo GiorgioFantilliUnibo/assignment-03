@@ -4,6 +4,8 @@ package pcd.ass01;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Hashtable;
+import java.util.List;
+
 import pcd.ass01.SimulationMessages.*;
 
 public class SimulationPanel extends JPanel {
@@ -11,10 +13,10 @@ public class SimulationPanel extends JPanel {
     private final JSlider cohesionSlider, separationSlider, alignmentSlider;
     private final JButton suspendResumeButton, stopButton;
 
-    public SimulationPanel(ViewActor view, double width, int nBoids) {
+    public SimulationPanel(ViewActor view, double width, int nBoids, List<BoidActor.BoidState> initialStates) {
         setLayout(new BorderLayout());
 
-        boidsPanel = new BoidsPanel(view, width, nBoids);
+        boidsPanel = new BoidsPanel(view, width, nBoids, initialStates);
         add(boidsPanel, BorderLayout.CENTER);
 
         JPanel controlPanel = new JPanel();

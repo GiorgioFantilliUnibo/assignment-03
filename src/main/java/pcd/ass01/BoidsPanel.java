@@ -14,7 +14,8 @@ public class BoidsPanel extends JPanel {
     private List<BoidState> boidStates;
     private int framerate;
 
-    public BoidsPanel(ViewActor view, double width, int nBoids) {
+    public BoidsPanel(ViewActor view, double width, int nBoids, List<BoidState> initialStates) {
+        this.boidStates = initialStates;
         this.nBoids = nBoids;
         this.width = width;
     	this.view = view;

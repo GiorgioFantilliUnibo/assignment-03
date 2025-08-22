@@ -36,6 +36,7 @@ public class GuardianActor extends AbstractActor {
                 .match(RenderFrame.class, this::onRenderFrame)
                 .match(StartSimulation.class, this::onStartGuardian)
                 .match(ViewActorAttachment.class, this::onAttachView)
+                .match(WorldReady.class, this::onWorldReady)
                 .build();
     }
 
@@ -65,6 +66,9 @@ public class GuardianActor extends AbstractActor {
         log("Guardian starting simulation...");
 
         world.tell(msg, getSelf());
+    }
+
+    private void onWorldReady(WorldReady msg) {
         renderer.ifPresent((x) -> x.tell(msg, getSelf()));
         running = true;
         scheduleNextTick();
@@ -73,8 +77,9 @@ public class GuardianActor extends AbstractActor {
     private void onStop(StopSimulation msg) {
         log("Stopping simulation");
         running = false;
-        getContext().stop(world);
-        renderer.ifPresent(x -> getContext().stop(renderer.get()));
+        //getContext().stop(world);
+        renderer.ifPresent(x -> x.tell(msg, getSelf()));
+        //renderer.ifPresent(x -> getContext().stop(renderer.get()));
     }
 
     private void onAttachView(ViewActorAttachment msg){
